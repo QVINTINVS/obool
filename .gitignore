@@ -1,0 +1,9 @@
+_build/
+*.cmi
+*.cmo
+*.cmx
+*.swp
+*.swo
+*.install
+
+.vscode
