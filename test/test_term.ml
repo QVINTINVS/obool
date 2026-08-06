@@ -73,6 +73,34 @@ let test_normalization_is_idempotent _ =
     assert_equal (Term normalized_term) (normalize normalized_term)
 ;;
 
+let test_positive_variable_is_present _ =
+  (* A C *)
+  let term = of_lsb_ints 0b0101 0b0000 in
+  assert_equal Present (positive_variable_at term 0);
+  assert_equal Present (positive_variable_at term 2)
+;;
+
+let test_positive_variable_is_absent _ =
+  (* A C *)
+  let term = of_lsb_ints 0b0101 0b0000 in
+  assert_equal Absent (positive_variable_at term 1);
+  assert_equal Absent (positive_variable_at term 3)
+;;
+
+let test_negated_variable_is_present _ =
+  (* B D' *)
+  let term = of_lsb_ints 0b0000 0b1010 in
+  assert_equal Present (negated_variable_at term 1);
+  assert_equal Present (negated_variable_at term 3)
+;;
+
+let test_negated_variable_is_absent _ =
+  (* B D' *)
+  let term = of_lsb_ints 0b0000 0b1010 in
+  assert_equal Absent (negated_variable_at term 0);
+  assert_equal Absent (negated_variable_at term 2)
+;;
+
 let suite =
   "term_operations"
   >::: [ "common_factor_of_identical_literals"
@@ -92,6 +120,10 @@ let suite =
        ; "normalize_preserves_consistent_term"
          >:: test_normalize_preserves_consistent_term
        ; "normalization_is_idempotent" >:: test_normalization_is_idempotent
+       ; "positive_variable_is_present" >:: test_positive_variable_is_present
+       ; "positive_variable_is_absent" >:: test_positive_variable_is_absent
+       ; "negated_variable_is_present" >:: test_negated_variable_is_present
+       ; "negated_variable_is_absent" >:: test_negated_variable_is_absent
        ]
 ;;
 
