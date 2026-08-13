@@ -11,7 +11,7 @@ type occurrence =
   | Absent
   | Present
 
-val of_lsb_ints : int -> int -> t
+val of_lsb_ints : ?variable_count:int -> int -> int -> t
 val common_factor : t -> t -> t
 val normalize : t -> normalized
 val positive_variable_at : t -> int -> occurrence
