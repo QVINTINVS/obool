@@ -35,8 +35,10 @@ let normalize term =
   if is_contradictory term || is_empty term then Zero else Term term
 ;;
 
-let positive_variable_at term position =
-  if Bitv.get term.positive_bits position then Present else Absent
+let literal_occurrence term position =
+  if Bitv.(get (append term.positive_bits term.negated_bits) position)
+  then Present
+  else Absent
 ;;
 
 let negated_variable_at term position =
