@@ -41,6 +41,8 @@ let literal_occurrence term position =
   else Absent
 ;;
 
-let negated_variable_at term position =
-  if Bitv.get term.negated_bits position then Present else Absent
+let all_zero_from term position =
+  Bitv.(
+    append term.positive_bits term.negated_bits
+    |> fun bits -> sub bits position (length bits - position) |> all_zeros)
 ;;

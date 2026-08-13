@@ -91,6 +91,38 @@ let test_literal_occurrence_negated_variables _ =
   assert_equal Present (literal_occurrence term 7)
 ;;
 
+let test_all_zero_from_before_literal _ =
+  (* A B *)
+  let term = of_lsb_ints ~variable_count:2 0b11 0b00 in
+  assert_equal false (all_zero_from term 0);
+  assert_equal false (all_zero_from term 1);
+  assert_equal true (all_zero_from term 2)
+;;
+
+let test_all_zero_from_negated_literal _ =
+  (* A B' *)
+  let term = of_lsb_ints ~variable_count:2 0b01 0b10 in
+  assert_equal false (all_zero_from term 2);
+  assert_equal false (all_zero_from term 3);
+  assert_equal true (all_zero_from term 4)
+;;
+
+let test_all_zero_from_zero_term _ =
+  let term = of_lsb_ints ~variable_count:2 0b00 0b00 in
+  assert_equal true (all_zero_from term 0);
+  assert_equal true (all_zero_from term 2);
+  assert_equal true (all_zero_from term 4)
+;;
+
+let test_all_zero_from_single_literal _ =
+  (* A *)
+  let term = of_lsb_ints ~variable_count:2 0b01 0b00 in
+  assert_equal false (all_zero_from term 0);
+  assert_equal true (all_zero_from term 1);
+  assert_equal true (all_zero_from term 2);
+  assert_equal true (all_zero_from term 4)
+;;
+
 let suite =
   "term_operations"
   >::: [ "common_factor_of_identical_literals"
@@ -110,10 +142,14 @@ let suite =
        ; "normalize_preserves_consistent_term"
          >:: test_normalize_preserves_consistent_term
        ; "normalization_is_idempotent" >:: test_normalization_is_idempotent
-       ; "positive_variable_is_present" >:: test_positive_variable_is_present
-       ; "positive_variable_is_absent" >:: test_positive_variable_is_absent
-       ; "negated_variable_is_present" >:: test_negated_variable_is_present
-       ; "negated_variable_is_absent" >:: test_negated_variable_is_absent
+       ; "literal_occurrence_positive_variables"
+         >:: test_literal_occurrence_positive_variables
+       ; "literal_occurrence_negated_variables"
+         >:: test_literal_occurrence_negated_variables
+       ; "all_zero_from_before_literal" >:: test_all_zero_from_before_literal
+       ; "all_zero_from_negated_literal" >:: test_all_zero_from_negated_literal
+       ; "all_zero_from_zero_term" >:: test_all_zero_from_zero_term
+       ; "all_zero_from_single_literal" >:: test_all_zero_from_single_literal
        ]
 ;;
 
