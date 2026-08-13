@@ -73,32 +73,54 @@ let test_normalization_is_idempotent _ =
     assert_equal (Term normalized_term) (normalize normalized_term)
 ;;
 
-let test_positive_variable_is_present _ =
+let test_literal_occurrence_positive_variables _ =
   (* A C *)
-  let term = of_lsb_ints 0b0101 0b0000 in
-  assert_equal Present (positive_variable_at term 0);
-  assert_equal Present (positive_variable_at term 2)
+  let term = of_lsb_ints ~variable_count:4 0b0101 0b0000 in
+  assert_equal Present (literal_occurrence term 0);
+  assert_equal Absent (literal_occurrence term 1);
+  assert_equal Present (literal_occurrence term 2);
+  assert_equal Absent (literal_occurrence term 3)
 ;;
 
-let test_positive_variable_is_absent _ =
-  (* A C *)
-  let term = of_lsb_ints 0b0101 0b0000 in
-  assert_equal Absent (positive_variable_at term 1);
-  assert_equal Absent (positive_variable_at term 3)
+let test_literal_occurrence_negated_variables _ =
+  (* B' D' *)
+  let term = of_lsb_ints ~variable_count:4 0b0000 0b1010 in
+  assert_equal Absent (literal_occurrence term 4);
+  assert_equal Present (literal_occurrence term 5);
+  assert_equal Absent (literal_occurrence term 6);
+  assert_equal Present (literal_occurrence term 7)
 ;;
 
-let test_negated_variable_is_present _ =
-  (* B D' *)
-  let term = of_lsb_ints 0b0000 0b1010 in
-  assert_equal Present (negated_variable_at term 1);
-  assert_equal Present (negated_variable_at term 3)
+let test_all_zero_from_before_literal _ =
+  (* A B *)
+  let term = of_lsb_ints ~variable_count:2 0b11 0b00 in
+  assert_equal false (all_zero_from term 0);
+  assert_equal false (all_zero_from term 1);
+  assert_equal true (all_zero_from term 2)
 ;;
 
-let test_negated_variable_is_absent _ =
-  (* B D' *)
-  let term = of_lsb_ints 0b0000 0b1010 in
-  assert_equal Absent (negated_variable_at term 0);
-  assert_equal Absent (negated_variable_at term 2)
+let test_all_zero_from_negated_literal _ =
+  (* A B' *)
+  let term = of_lsb_ints ~variable_count:2 0b01 0b10 in
+  assert_equal false (all_zero_from term 2);
+  assert_equal false (all_zero_from term 3);
+  assert_equal true (all_zero_from term 4)
+;;
+
+let test_all_zero_from_zero_term _ =
+  let term = of_lsb_ints ~variable_count:2 0b00 0b00 in
+  assert_equal true (all_zero_from term 0);
+  assert_equal true (all_zero_from term 2);
+  assert_equal true (all_zero_from term 4)
+;;
+
+let test_all_zero_from_single_literal _ =
+  (* A *)
+  let term = of_lsb_ints ~variable_count:2 0b01 0b00 in
+  assert_equal false (all_zero_from term 0);
+  assert_equal true (all_zero_from term 1);
+  assert_equal true (all_zero_from term 2);
+  assert_equal true (all_zero_from term 4)
 ;;
 
 let suite =
@@ -120,10 +142,14 @@ let suite =
        ; "normalize_preserves_consistent_term"
          >:: test_normalize_preserves_consistent_term
        ; "normalization_is_idempotent" >:: test_normalization_is_idempotent
-       ; "positive_variable_is_present" >:: test_positive_variable_is_present
-       ; "positive_variable_is_absent" >:: test_positive_variable_is_absent
-       ; "negated_variable_is_present" >:: test_negated_variable_is_present
-       ; "negated_variable_is_absent" >:: test_negated_variable_is_absent
+       ; "literal_occurrence_positive_variables"
+         >:: test_literal_occurrence_positive_variables
+       ; "literal_occurrence_negated_variables"
+         >:: test_literal_occurrence_negated_variables
+       ; "all_zero_from_before_literal" >:: test_all_zero_from_before_literal
+       ; "all_zero_from_negated_literal" >:: test_all_zero_from_negated_literal
+       ; "all_zero_from_zero_term" >:: test_all_zero_from_zero_term
+       ; "all_zero_from_single_literal" >:: test_all_zero_from_single_literal
        ]
 ;;
 

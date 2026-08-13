@@ -11,9 +11,9 @@ type occurrence =
   | Absent
   | Present
 
-let of_lsb_ints positive negated =
-  { positive_bits = Bitv.of_int_us positive
-  ; negated_bits = Bitv.of_int_us negated
+let of_lsb_ints ?(variable_count = Sys.int_size - 1) positive negated =
+  { positive_bits = Bitv.(of_int_us positive |> get |> init variable_count)
+  ; negated_bits = Bitv.(of_int_us negated |> get |> init variable_count)
   }
 ;;
 
@@ -35,10 +35,14 @@ let normalize term =
   if is_contradictory term || is_empty term then Zero else Term term
 ;;
 
-let positive_variable_at term position =
-  if Bitv.get term.positive_bits position then Present else Absent
+let literal_occurrence term position =
+  if Bitv.(get (append term.positive_bits term.negated_bits) position)
+  then Present
+  else Absent
 ;;
 
-let negated_variable_at term position =
-  if Bitv.get term.negated_bits position then Present else Absent
+let all_zero_from term position =
+  Bitv.(
+    append term.positive_bits term.negated_bits
+    |> fun bits -> sub bits position (length bits - position) |> all_zeros)
 ;;
