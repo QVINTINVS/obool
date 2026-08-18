@@ -36,9 +36,9 @@ let normalize term =
 ;;
 
 let literal_occurrence term position =
-  if Bitv.(get (append term.positive_bits term.negated_bits) position)
-  then Present
-  else Absent
+  let bits = Bitv.append term.positive_bits term.negated_bits in
+  let clamped_position = Bitv.length bits - 1 |> min position |> max 0 in
+  if Bitv.get bits clamped_position then Present else Absent
 ;;
 
 let all_zero_from term position =
