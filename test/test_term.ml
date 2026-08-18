@@ -48,6 +48,24 @@ let test_common_factor_is_commutative _ =
   assert_equal actual_first_second actual_second_first
 ;;
 
+let test_common_factor_is_idempotent _ =
+  (* ACD · B' *)
+  let given_term = term4 0b1101 0b0010 in
+  let actual_factor = common_factor given_term given_term in
+  let expected_factor = given_term in
+  assert_equal expected_factor actual_factor
+;;
+
+let test_common_factor_with_zero _ =
+  (* ABCD *)
+  let given_term_abcd = term4 0b1111 0b0000 in
+  (* 0 *)
+  let given_zero_term = term4 0b0000 0b0000 in
+  let actual_factor = common_factor given_term_abcd given_zero_term in
+  let expected_factor = term4 0b0000 0b0000 in
+  assert_equal expected_factor actual_factor
+;;
+
 let common_factor_test_suite =
   "common_factor"
   >::: [ "identical_literals" >:: test_common_factor_of_identical_literals
@@ -55,6 +73,8 @@ let common_factor_test_suite =
        ; "preserves_shared_literals"
          >:: test_common_factor_preserves_shared_literals
        ; "commutativity" >:: test_common_factor_is_commutative
+       ; "idempotency" >:: test_common_factor_is_idempotent
+       ; "with_zero" >:: test_common_factor_with_zero
        ]
 ;;
 
@@ -141,10 +161,19 @@ let test_literal_occurrence_negated_variables _ =
   assert_equal Present (literal_occurrence given_term_not_bd 7)
 ;;
 
+let test_literal_occurrence_out_of_bounds _ =
+  (* AC *)
+  let given_term_ac = term4 0b0101 0b0000 in
+  assert_equal Absent (literal_occurrence given_term_ac 8);
+  assert_equal Absent (literal_occurrence given_term_ac 100);
+  assert_equal Present (literal_occurrence given_term_ac (-1))
+;;
+
 let literal_occurrence_test_suite =
   "literal_occurrence"
   >::: [ "positive_variables" >:: test_literal_occurrence_positive_variables
        ; "negated_variables" >:: test_literal_occurrence_negated_variables
+       ; "out_of_bounds" >:: test_literal_occurrence_out_of_bounds
        ]
 ;;
 
