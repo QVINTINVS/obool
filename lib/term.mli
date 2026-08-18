@@ -1,7 +1,4 @@
-type t =
-  { positive_bits : Bitv.t
-  ; negated_bits : Bitv.t
-  }
+type t
 
 type normalized =
   | Zero
