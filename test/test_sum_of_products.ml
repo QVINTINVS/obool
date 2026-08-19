@@ -4,99 +4,113 @@ open Sum_of_products
 
 let term = Term.of_lsb_ints
 
-let test_insert_first_term_creates_root_path _ =
+let test_dont_care_variables_are_omitted_from_representation _ =
   (* A *)
-  let trie = empty ~variable_count:2 |> add_term (term 0b01 0b00) in
-  match trie.root with
-  | Empty -> assert_failure "The trie should no longer be empty."
-  | Node _ | Terminal -> ()
+  let given_term_a = term 0b01 0b00 in
+  let given_expression = empty ~variable_count:2 in
+  let actual_expression = add_term given_term_a given_expression in
+  (* A (B is don't-care) *)
+  let expected_expression =
+    { variable_count = 2; root = Node { absent = Empty; present = Terminal } }
+  in
+  assert_equal expected_expression actual_expression
 ;;
 
-let test_inserting_the_same_term_twice_keeps_the_same_structure _ =
+let test_addition_of_duplicate_term_is_idempotent _ =
   (* A *)
-  let term = term 0b01 0b00 in
-  let once = empty ~variable_count:2 |> add_term term in
-  let twice = once |> add_term term in
-  assert_equal once twice
+  let given_term_a = term 0b01 0b00 in
+  let given_expression_with_a =
+    empty ~variable_count:2 |> add_term given_term_a
+  in
+  let actual_expression = add_term given_term_a given_expression_with_a in
+  (* A + A = A *)
+  let expected_expression = given_expression_with_a in
+  assert_equal expected_expression actual_expression
 ;;
 
-let test_inserting_terms_with_common_prefix_shares_nodes _ =
-  let trie =
-    empty ~variable_count:3
-    (* A B *)
-    |> add_term (term 0b011 0b000)
-    (* A C *)
-    |> add_term (term 0b101 0b000)
+let test_terms_sharing_common_literal_factor_their_prefix _ =
+  (* A B *)
+  let given_term_ab = term 0b011 0b000 in
+  (* A C *)
+  let given_term_ac = term 0b101 0b000 in
+  let given_expression = empty ~variable_count:3 in
+  let actual_expression =
+    given_expression |> add_term given_term_ab |> add_term given_term_ac
   in
-  let absent, present =
-    match trie.root with
-    | Empty -> assert_failure "The trie should not be empty."
-    | Terminal -> assert_failure "The root should not be terminal."
-    | Node { absent; present } -> absent, present
+  (* AB + AC = A(B + C) *)
+  let expected_expression =
+    { variable_count = 3
+    ; root =
+        Node
+          { absent = Empty
+          ; present =
+              Node
+                { absent = Node { absent = Empty; present = Terminal }
+                ; present = Terminal
+                }
+          }
+    }
   in
-  match absent, present with
-  | Empty, Node _ -> ()
-  | _ -> assert_failure "The terms should share the first node."
+  assert_equal expected_expression actual_expression
 ;;
 
-let test_inserting_terms_with_distinct_first_bit_creates_two_branches _ =
-  let trie =
-    empty ~variable_count:2
-    |> add_term (term 0b01 0b00)
-    |> add_term (term 0b10 0b00)
+let test_disjoint_literals_form_independent_product_terms _ =
+  (* A *)
+  let given_term_a = term 0b01 0b00 in
+  (* B *)
+  let given_term_b = term 0b10 0b00 in
+  let given_expression = empty ~variable_count:2 in
+  let actual_expression =
+    given_expression |> add_term given_term_a |> add_term given_term_b
   in
-  let absent, present =
-    match trie.root with
-    | Empty -> assert_failure "The trie should not be empty."
-    | Terminal -> assert_failure "The root should not be terminal."
-    | Node { absent; present } -> absent, present
+  (* A + B *)
+  let expected_expression =
+    { variable_count = 2
+    ; root =
+        Node
+          { absent = Node { absent = Empty; present = Terminal }
+          ; present = Terminal
+          }
+    }
   in
-  match absent, present with
-  | Node _, Terminal -> ()
-  | _ -> assert_failure "The terms should create two distinct branches."
+  assert_equal expected_expression actual_expression
 ;;
 
-let test_insert_single_literal_stops_at_terminal _ =
-  let trie = empty ~variable_count:2 |> add_term (term 0b01 0b00) in
-  match trie.root with
-  | Empty -> assert_failure "The trie should not be empty."
-  | Terminal -> assert_failure "The root should not be terminal."
-  | Node { absent; present } ->
-    assert_equal Empty absent;
-    assert_equal Terminal present
+let test_extra_bits_are_truncated _ =
+  (* ACD · B' *)
+  let given_overextended_term_ab = term 0b1101 0b0010 in
+  let given_expression = empty ~variable_count:2 in
+  let actual_expression =
+    add_term given_overextended_term_ab given_expression
+  in
+  (* ACD · B' -> A · B' (truncated to 2-variable universe) *)
+  let expected_expression =
+    { variable_count = 2
+    ; root =
+        Node
+          { absent = Empty
+          ; present =
+              Node
+                { absent = Node { absent = Empty; present = Terminal }
+                ; present = Empty
+                }
+          }
+    }
+  in
+  assert_equal expected_expression actual_expression
 ;;
 
-let test_insert_full_term_reaches_terminal_at_last_literal _ =
-  let trie = empty ~variable_count:2 |> add_term (term 0b11 0b00) in
-  let first_absent, first_present =
-    match trie.root with
-    | Empty -> assert_failure "The trie should not be empty."
-    | Terminal -> assert_failure "The root should not be terminal."
-    | Node { absent; present } -> absent, present
-  in
-  assert_equal Empty first_absent;
-  let second_absent, second_present =
-    match first_present with
-    | Empty -> assert_failure "The first literal should be present."
-    | Terminal -> assert_failure "The term should contain another literal."
-    | Node { absent; present } -> absent, present
-  in
-  assert_equal Empty second_absent;
-  assert_equal Terminal second_present
-;;
-
-let insertion_test_suite =
-  "sum_of_products_insert"
-  >::: [ "first_term" >:: test_insert_first_term_creates_root_path
-       ; "duplicate_term"
-         >:: test_inserting_the_same_term_twice_keeps_the_same_structure
-       ; "common_prefix"
-         >:: test_inserting_terms_with_common_prefix_shares_nodes
-       ; "distinct_first_bit"
-         >:: test_inserting_terms_with_distinct_first_bit_creates_two_branches
-       ; "single_literal" >:: test_insert_single_literal_stops_at_terminal
-       ; "full_term" >:: test_insert_full_term_reaches_terminal_at_last_literal
+let suite =
+  "add_term"
+  >::: [ "dont_care_omission"
+         >:: test_dont_care_variables_are_omitted_from_representation
+       ; "idempotency" >:: test_addition_of_duplicate_term_is_idempotent
+       ; "common_prefix_factoring"
+         >:: test_terms_sharing_common_literal_factor_their_prefix
+       ; "independent_terms"
+         >:: test_disjoint_literals_form_independent_product_terms
+       ; "extra_bits_truncated" >:: test_extra_bits_are_truncated
        ]
 ;;
 
-let _ = run_test_tt_main insertion_test_suite
+let _ = run_test_tt_main suite
