@@ -76,6 +76,41 @@ let test_disjoint_literals_form_independent_product_terms _ =
   assert_equal expected_expression actual_expression
 ;;
 
+let test_preserves_non_irredundant_terms _ =
+  (* B *)
+  let given_term_b = term 0b0010 0b0000 in
+  (* B C *)
+  let given_term_bc = term 0b0110 0b0000 in
+  (* B D *)
+  let given_term_bd = term 0b1010 0b0000 in
+  let given_expression = empty ~variable_count:4 in
+  let actual_expression =
+    given_expression
+    |> add_term given_term_b
+    |> add_term given_term_bc
+    |> add_term given_term_bd
+  in
+  (* B + BC + BD *)
+  let expected_expression =
+    { variable_count = 4
+    ; root =
+        Node
+          { absent =
+              Node
+                { absent = Empty
+                ; present =
+                    Node
+                      { absent = Node { absent = Terminal; present = Terminal }
+                      ; present = Terminal
+                      }
+                }
+          ; present = Empty
+          }
+    }
+  in
+  assert_equal expected_expression actual_expression
+;;
+
 let test_extra_bits_are_truncated _ =
   (* ACD · B' *)
   let given_overextended_term_ab = term 0b1101 0b0010 in
@@ -109,6 +144,7 @@ let suite =
          >:: test_terms_sharing_common_literal_factor_their_prefix
        ; "independent_terms"
          >:: test_disjoint_literals_form_independent_product_terms
+       ; "non_irredundant_terms" >:: test_preserves_non_irredundant_terms
        ; "extra_bits_truncated" >:: test_extra_bits_are_truncated
        ]
 ;;
