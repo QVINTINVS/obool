@@ -2,9 +2,6 @@ open OUnit2
 open Boolean_expression_simplifier
 open Term
 
-let term2 = of_lsb_ints ~variable_count:2
-let term4 = of_lsb_ints ~variable_count:4
-
 let test_common_factor_of_identical_literals _ =
   (* ABCD *)
   let given_term_abcd = term4 0b1111 0b0000 in
