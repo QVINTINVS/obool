@@ -54,6 +54,7 @@ let rec insert_term ?(depth = 0) variable_count term trie =
 
 let add_term term sop =
   let { variable_count; root } = sop in
+  let term = truncate variable_count term in
   let updated_root = insert_term variable_count term root in
   { sop with root = updated_root }
 ;;
