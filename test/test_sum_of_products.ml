@@ -126,8 +126,12 @@ let test_extra_bits_are_truncated _ =
           { absent = Empty
           ; present =
               Node
-                { absent = Node { absent = Empty; present = Terminal }
-                ; present = Empty
+                { present = Empty
+                ; absent =
+                    Node
+                      { present = Empty
+                      ; absent = Node { absent = Empty; present = Terminal }
+                      }
                 }
           }
     }
