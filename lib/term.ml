@@ -17,6 +17,15 @@ let of_lsb_ints ?(variable_count = Sys.int_size - 1) positive negated =
   }
 ;;
 
+let term2 = of_lsb_ints ~variable_count:2
+let term4 = of_lsb_ints ~variable_count:4
+
+let truncate variable_count term =
+  { positive_bits = Bitv.sub term.positive_bits 0 variable_count
+  ; negated_bits = Bitv.sub term.negated_bits 0 variable_count
+  }
+;;
+
 let common_factor left right =
   { positive_bits = Bitv.bw_and left.positive_bits right.positive_bits
   ; negated_bits = Bitv.bw_and left.negated_bits right.negated_bits
