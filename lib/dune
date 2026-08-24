@@ -1,9 +1,3 @@
 (library
  (name boolean_expression_simplifier)
- (libraries bitv integers))
-
-(ocamlyacc
- (modules parser))
-
-(ocamllex
- (modules lexer))
+ (libraries bitv))
