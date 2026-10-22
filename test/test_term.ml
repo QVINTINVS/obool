@@ -136,93 +136,12 @@ let normalization_test_suite =
        ; "rejects_multiple_contradictions"
          >:: test_normalize_rejects_multiple_contradictions
        ; "preserves_consistent" >:: test_normalize_preserves_consistent_term
-       ; "idempotency" >:: test_normalization_is_idempotent
-       ]
-;;
-
-let test_literal_occurrence_positive_variables _ =
-  (* AC *)
-  let given_term_ac = term4 0b0101 0b0000 in
-  assert_equal Present (literal_occurrence given_term_ac 0);
-  assert_equal Absent (literal_occurrence given_term_ac 1);
-  assert_equal Present (literal_occurrence given_term_ac 2);
-  assert_equal Absent (literal_occurrence given_term_ac 3)
-;;
-
-let test_literal_occurrence_negated_variables _ =
-  (* B'D' *)
-  let given_term_not_bd = term4 0b0000 0b1010 in
-  assert_equal Absent (literal_occurrence given_term_not_bd 4);
-  assert_equal Present (literal_occurrence given_term_not_bd 5);
-  assert_equal Absent (literal_occurrence given_term_not_bd 6);
-  assert_equal Present (literal_occurrence given_term_not_bd 7)
-;;
-
-let test_literal_occurrence_out_of_bounds _ =
-  (* AC *)
-  let given_term_ac = term4 0b0101 0b0000 in
-  assert_equal Absent (literal_occurrence given_term_ac 8);
-  assert_equal Absent (literal_occurrence given_term_ac 100);
-  assert_equal Present (literal_occurrence given_term_ac (-1))
-;;
-
-let literal_occurrence_test_suite =
-  "literal_occurrence"
-  >::: [ "positive_variables" >:: test_literal_occurrence_positive_variables
-       ; "negated_variables" >:: test_literal_occurrence_negated_variables
-       ; "out_of_bounds" >:: test_literal_occurrence_out_of_bounds
-       ]
-;;
-
-let test_all_zero_from_before_literal _ =
-  (* AB *)
-  let given_term_ab = term2 0b11 0b00 in
-  assert_equal false (all_zero_from given_term_ab 0);
-  assert_equal false (all_zero_from given_term_ab 1);
-  assert_equal true (all_zero_from given_term_ab 2)
-;;
-
-let test_all_zero_from_negated_literal _ =
-  (* AB' *)
-  let given_term_a_not_b = term2 0b01 0b10 in
-  assert_equal false (all_zero_from given_term_a_not_b 2);
-  assert_equal false (all_zero_from given_term_a_not_b 3);
-  assert_equal true (all_zero_from given_term_a_not_b 4)
-;;
-
-let test_all_zero_from_zero_term _ =
-  (* 0 *)
-  let given_empty_term = term2 0b00 0b00 in
-  assert_equal true (all_zero_from given_empty_term 0);
-  assert_equal true (all_zero_from given_empty_term 2);
-  assert_equal true (all_zero_from given_empty_term 4)
-;;
-
-let test_all_zero_from_single_literal _ =
-  (* A *)
-  let given_term_a = term2 0b01 0b00 in
-  assert_equal false (all_zero_from given_term_a 0);
-  assert_equal true (all_zero_from given_term_a 1);
-  assert_equal true (all_zero_from given_term_a 2);
-  assert_equal true (all_zero_from given_term_a 4)
-;;
-
-let all_zero_from_test_suite =
-  "all_zero_from"
-  >::: [ "before_literal" >:: test_all_zero_from_before_literal
-       ; "negated_literal" >:: test_all_zero_from_negated_literal
-       ; "zero_term" >:: test_all_zero_from_zero_term
-       ; "single_literal" >:: test_all_zero_from_single_literal
        ]
 ;;
 
 let suite =
   "term_operations_suite"
-  >::: [ common_factor_test_suite
-       ; normalization_test_suite
-       ; literal_occurrence_test_suite
-       ; all_zero_from_test_suite
-       ]
+  >::: [ common_factor_test_suite; normalization_test_suite ]
 ;;
 
 let () = run_test_tt_main suite

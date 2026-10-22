@@ -44,18 +44,6 @@ let normalize term =
   if is_contradictory term || is_empty term then Zero else Term term
 ;;
 
-let literal_occurrence term position =
-  let bits = Bitv.append term.positive_bits term.negated_bits in
-  let clamped_position = Bitv.length bits - 1 |> min position |> max 0 in
-  if Bitv.get bits clamped_position then Present else Absent
-;;
-
-let all_zero_from term position =
-  Bitv.(
-    append term.positive_bits term.negated_bits
-    |> fun bits -> sub bits position (length bits - position) |> all_zeros)
-;;
-
 let variables term =
   Seq.append
     (Seq.init (Bitv.length term.positive_bits) (Bitv.get term.positive_bits))
