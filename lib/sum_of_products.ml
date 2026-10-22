@@ -58,3 +58,27 @@ let add_term term sop =
   let updated_root = insert_term variables root in
   { sop with root = updated_root }
 ;;
+
+let absorption_branches branches = function
+  | Present -> [ Present, branches.present; Absent, branches.absent ]
+  | Absent -> [ Absent, branches.absent ]
+;;
+
+let rec find_absorbing_path variables trie =
+  match trie, variables with
+  | Terminal, rest -> Some (List.map (fun _ -> Absent) rest)
+  | Empty, _ | _, [] -> None
+  | Node branches, variable :: rest ->
+    absorption_branches branches variable
+    |> List.find_map (fun (found_occurrence, subtree) ->
+      find_absorbing_path rest subtree
+      |> Option.map (fun found -> found_occurrence :: found))
+;;
+
+let get_first_term_that_absorves term sop =
+  let { variable_count; root } = sop in
+  let term = truncate variable_count term in
+  let variables = variables term |> List.of_seq in
+  find_absorbing_path variables root
+  |> Option.map (of_variables_list ~variable_count)
+;;
