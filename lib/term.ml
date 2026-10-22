@@ -7,7 +7,7 @@ type normalized =
   | Zero
   | Term of t
 
-type occurrence =
+type variable =
   | Absent
   | Present
 
