@@ -55,3 +55,28 @@ let all_zero_from term position =
     append term.positive_bits term.negated_bits
     |> fun bits -> sub bits position (length bits - position) |> all_zeros)
 ;;
+
+let variables term =
+  Seq.append
+    (Seq.init (Bitv.length term.positive_bits) (Bitv.get term.positive_bits))
+    (Seq.init (Bitv.length term.negated_bits) (Bitv.get term.negated_bits))
+  |> Seq.map (fun var -> if var then Present else Absent)
+;;
+
+let int_of_bits bits =
+  Seq.fold_lefti (fun acc i bit -> acc lor (bit lsl i)) 0 bits
+;;
+
+let of_variables_list ~variable_count variables =
+  let bits_seq =
+    variables
+    |> List.to_seq
+    |> Seq.map (function
+      | Present -> 1
+      | Absent -> 0)
+  in
+  of_lsb_ints
+    ~variable_count
+    (Seq.take variable_count bits_seq |> int_of_bits)
+    (Seq.drop variable_count bits_seq |> int_of_bits)
+;;
