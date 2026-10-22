@@ -41,20 +41,20 @@ let with_child branches occurrence updated_trie =
   | Absent -> Node { branches with absent = updated_trie }
 ;;
 
-let rec insert_term ?(depth = 0) variable_count term trie =
-  if depth = variable_count * 2 || (is_leaf trie && all_zero_from term depth)
-  then Terminal
-  else (
+let rec insert_term variables trie =
+  match variables with
+  | [] -> Terminal
+  | _ when is_leaf trie && List.for_all (( = ) Absent) variables -> Terminal
+  | variable :: rest ->
     let branches = branches_of trie in
-    let occurrence = literal_occurrence term depth in
-    child branches occurrence
-    |> insert_term ~depth:(succ depth) variable_count term
-    |> with_child branches occurrence)
+    let updated_child = child branches variable |> insert_term rest in
+    with_child branches variable updated_child
 ;;
 
 let add_term term sop =
   let { variable_count; root } = sop in
   let term = truncate variable_count term in
-  let updated_root = insert_term variable_count term root in
+  let variables = variables term |> List.of_seq in
+  let updated_root = insert_term variables root in
   { sop with root = updated_root }
 ;;
