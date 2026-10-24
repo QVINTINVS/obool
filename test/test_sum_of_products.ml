@@ -3,6 +3,13 @@ open Boolean_expression_simplifier
 open Term
 open Sum_of_products
 
+let test_inserting_an_all_absent_term_does_not_create_a_terminal_root _ =
+  let given_term = term4 0b0000 0b0000 in
+  let given_expression = empty ~variable_count:4 in
+  let actual_expression = add_term given_term given_expression in
+  assert_equal given_expression actual_expression
+;;
+
 let test_dont_care_variables_are_omitted_from_representation _ =
   (* A *)
   let given_term_a = term2 0b01 0b00 in
@@ -140,7 +147,9 @@ let test_extra_bits_are_truncated _ =
 
 let add_term_test_suite =
   "add_term"
-  >::: [ "dont_care_omission"
+  >::: [ "all_absent_term"
+         >:: test_inserting_an_all_absent_term_does_not_create_a_terminal_root
+       ; "dont_care_omission"
          >:: test_dont_care_variables_are_omitted_from_representation
        ; "idempotency" >:: test_addition_of_duplicate_term_is_idempotent
        ; "common_prefix_factoring"

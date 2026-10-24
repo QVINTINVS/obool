@@ -41,10 +41,12 @@ let with_child branches occurrence updated_trie =
   | Absent -> Node { branches with absent = updated_trie }
 ;;
 
+let all_absent variables = List.for_all (( = ) Absent) variables
+
 let rec insert_term variables trie =
   match variables with
   | [] -> Terminal
-  | _ when is_leaf trie && List.for_all (( = ) Absent) variables -> Terminal
+  | _ when is_leaf trie && all_absent variables -> Terminal
   | variable :: rest ->
     let branches = branches_of trie in
     let updated_child = child branches variable |> insert_term rest in
@@ -56,7 +58,7 @@ let add_term term sop =
   let term = Term.truncate variable_count term in
   let variables = variables term |> List.of_seq in
   let updated_root = insert_term variables root in
-  { sop with root = updated_root }
+  if all_absent variables then sop else { sop with root = updated_root }
 ;;
 
 let absorption_branches branches = function
