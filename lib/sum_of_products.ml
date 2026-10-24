@@ -32,7 +32,7 @@ let child { absent; present } = function
 
 let is_leaf = function
   | Empty | Terminal -> true
-  | _ -> false
+  | Node _ -> false
 ;;
 
 let with_child branches occurrence updated_trie =
@@ -53,7 +53,7 @@ let rec insert_term variables trie =
 
 let add_term term sop =
   let { variable_count; root } = sop in
-  let term = truncate variable_count term in
+  let term = Term.truncate variable_count term in
   let variables = variables term |> List.of_seq in
   let updated_root = insert_term variables root in
   { sop with root = updated_root }
@@ -77,7 +77,7 @@ let rec find_absorbing_path variables trie =
 
 let get_first_term_that_absorves term sop =
   let { variable_count; root } = sop in
-  let term = truncate variable_count term in
+  let term = Term.truncate variable_count term in
   let variables = variables term |> List.of_seq in
   find_absorbing_path variables root
   |> Option.map (of_variables_list ~variable_count)
