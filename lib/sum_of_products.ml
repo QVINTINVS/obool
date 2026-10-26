@@ -41,7 +41,16 @@ let with_child branches occurrence updated_trie =
   | Absent -> Node { branches with absent = updated_trie }
 ;;
 
+let has_no_children = function
+  | Node { absent = Empty; present = Empty } -> true
+  | Empty | Terminal | Node _ -> false
+;;
+
 let all_absent variables = List.for_all (( = ) Absent) variables
+
+let term_variables term sop =
+  Term.truncate sop.variable_count term |> variables |> List.of_seq
+;;
 
 let rec insert_term variables trie =
   match variables with
@@ -54,10 +63,8 @@ let rec insert_term variables trie =
 ;;
 
 let add_term term sop =
-  let { variable_count; root } = sop in
-  let term = Term.truncate variable_count term in
-  let variables = variables term |> List.of_seq in
-  let updated_root = insert_term variables root in
+  let variables = term_variables term sop in
+  let updated_root = insert_term variables sop.root in
   if all_absent variables then sop else { sop with root = updated_root }
 ;;
 
@@ -78,9 +85,7 @@ let rec find_absorbing_path variables trie =
 ;;
 
 let get_first_term_that_absorves term sop =
-  let { variable_count; root } = sop in
-  let term = Term.truncate variable_count term in
-  let variables = variables term |> List.of_seq in
-  find_absorbing_path variables root
-  |> Option.map (of_variables_list ~variable_count)
+  let variables = term_variables term sop in
+  find_absorbing_path variables sop.root
+  |> Option.map (of_variables_list ~variable_count:sop.variable_count)
 ;;
