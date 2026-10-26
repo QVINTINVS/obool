@@ -68,6 +68,22 @@ let add_term term sop =
   if all_absent variables then sop else { sop with root = updated_root }
 ;;
 
+let rec delete_term variables trie =
+  match variables with
+  | [] -> Empty
+  | variable :: rest ->
+    let branches = branches_of trie in
+    let updated_child = child branches variable |> delete_term rest in
+    let updated_trie = with_child branches variable updated_child in
+    if has_no_children updated_trie then Empty else updated_trie
+;;
+
+let remove_term term sop =
+  let variables = term_variables term sop in
+  let updated_root = delete_term variables sop.root in
+  { sop with root = updated_root }
+;;
+
 let absorption_branches branches = function
   | Present -> [ Present, branches.present; Absent, branches.absent ]
   | Absent -> [ Absent, branches.absent ]

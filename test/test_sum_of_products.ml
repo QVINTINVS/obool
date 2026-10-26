@@ -161,6 +161,84 @@ let add_term_test_suite =
        ]
 ;;
 
+let test_removing_an_existing_term _ =
+  (* A *)
+  let given_term_a = term2 0b01 0b00 in
+  let given_expression = empty ~variable_count:2 |> add_term given_term_a in
+  let actual_expression = remove_term given_term_a given_expression in
+  let expected_expression = empty ~variable_count:2 in
+  assert_equal expected_expression actual_expression
+;;
+
+let test_removing_a_nonexistent_term_preserves_expression _ =
+  (* A *)
+  let given_term_a = term2 0b01 0b00 in
+  (* B *)
+  let given_term_b = term2 0b10 0b00 in
+  let given_expression = empty ~variable_count:2 |> add_term given_term_a in
+  let actual_expression = remove_term given_term_b given_expression in
+  let expected_expression = given_expression in
+  assert_equal expected_expression actual_expression
+;;
+
+let test_removing_one_term_preserves_other_terms _ =
+  (* A *)
+  let given_term_a = term2 0b01 0b00 in
+  (* B *)
+  let given_term_b = term2 0b10 0b00 in
+  let given_expression =
+    empty ~variable_count:2 |> add_term given_term_a |> add_term given_term_b
+  in
+  let actual_expression = remove_term given_term_a given_expression in
+  let expected_expression = empty ~variable_count:2 |> add_term given_term_b in
+  assert_equal expected_expression actual_expression
+;;
+
+let test_removing_a_term_preserves_shared_prefix _ =
+  (* AB *)
+  let given_term_ab = term4 0b0011 0b0000 in
+  (* AC *)
+  let given_term_ac = term4 0b0101 0b0000 in
+  let given_expression =
+    empty ~variable_count:4 |> add_term given_term_ab |> add_term given_term_ac
+  in
+  let actual_expression = remove_term given_term_ab given_expression in
+  let expected_expression = empty ~variable_count:4 |> add_term given_term_ac in
+  assert_equal expected_expression actual_expression
+;;
+
+let test_removing_a_term_with_dont_care_variables _ =
+  (* A; B is a don't-care *)
+  let given_term_a = term2 0b01 0b00 in
+  let given_expression = empty ~variable_count:2 |> add_term given_term_a in
+  (* A is represented by a terminal before the end of the trie. *)
+  let actual_expression = remove_term given_term_a given_expression in
+  let expected_expression = empty ~variable_count:2 in
+  assert_equal expected_expression actual_expression
+;;
+
+let test_removing_a_term_with_extra_bits _ =
+  (* A term with more variables than the expression supports. *)
+  let given_term_a = term4 0b1101 0b0010 in
+  let given_expression = empty ~variable_count:2 |> add_term given_term_a in
+  let actual_expression = remove_term given_term_a given_expression in
+  let expected_expression = empty ~variable_count:2 in
+  assert_equal expected_expression actual_expression
+;;
+
+let remove_term_test_suite =
+  "remove_term"
+  >::: [ "existing_term" >:: test_removing_an_existing_term
+       ; "nonexistent_term"
+         >:: test_removing_a_nonexistent_term_preserves_expression
+       ; "preserves_other_terms"
+         >:: test_removing_one_term_preserves_other_terms
+       ; "shared_prefix" >:: test_removing_a_term_preserves_shared_prefix
+       ; "dont_care_variables" >:: test_removing_a_term_with_dont_care_variables
+       ; "extra_bits_truncated" >:: test_removing_a_term_with_extra_bits
+       ]
+;;
+
 let test_absorption_finds_an_existing_absorbing_term _ =
   (* A absorbs AB *)
   let given_term_a = term4 0b0001 0b0000 in
@@ -305,7 +383,8 @@ let absorption_test_suite =
 ;;
 
 let suite =
-  "sum_of_products_suite" >::: [ add_term_test_suite; absorption_test_suite ]
+  "sum_of_products_suite"
+  >::: [ add_term_test_suite; remove_term_test_suite; absorption_test_suite ]
 ;;
 
 let () = run_test_tt_main suite
